@@ -1,83 +1,116 @@
---// DakaitUI Library (Single File)
+--// DakaitUI Library (Mobile + PC)
+--// Single-file Custom GUI Library
+--// By Dakait
+
 local DakaitUI = {}
 DakaitUI.__index = DakaitUI
 
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
 
---====================
+-- ======================
 -- THEME
---====================
+-- ======================
 local Theme = {
-    Main = Color3.fromRGB(22, 22, 22),
-    Secondary = Color3.fromRGB(30, 30, 30),
-    Accent = Color3.fromRGB(255, 140, 40),
-    Text = Color3.fromRGB(255, 255, 255),
-    Sidebar = Color3.fromRGB(18, 18, 18)
+    Main = Color3.fromRGB(22,22,22),
+    Top = Color3.fromRGB(28,28,28),
+    Accent = Color3.fromRGB(255,140,40), -- Neon Orange
+    Text = Color3.fromRGB(240,240,240),
+    Sidebar = Color3.fromRGB(18,18,18)
 }
 
---====================
+-- ======================
 -- CREATE WINDOW
---====================
-function DakaitUI:CreateWindow(title)
+-- ======================
+function DakaitUI:CreateWindow(title, logoImage)
     local Window = setmetatable({}, DakaitUI)
 
-    local gui = Instance.new("ScreenGui")
+    local gui = Instance.new("ScreenGui", CoreGui)
     gui.Name = "DakaitUI"
-    gui.IgnoreGuiInset = true
-    gui.Parent = game:GetService("CoreGui")
+    gui.ResetOnSpawn = false
 
     local main = Instance.new("Frame", gui)
-    main.Size = UDim2.new(0, 560, 0, 380)
-    main.Position = UDim2.new(0.5, -280, 0.5, -190)
+    main.Size = UDim2.fromOffset(560, 380)
+    main.Position = UDim2.fromScale(0.5, 0.5) - UDim2.fromOffset(280,190)
     main.BackgroundColor3 = Theme.Main
     main.BorderSizePixel = 0
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
+    main.Active = true
 
-    -- Top bar
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0,10)
+
+    -- TOP BAR
     local top = Instance.new("Frame", main)
-    top.Size = UDim2.new(1, 0, 0, 45)
-    top.BackgroundColor3 = Theme.Secondary
+    top.Size = UDim2.new(1,0,0,44)
+    top.BackgroundColor3 = Theme.Top
     top.BorderSizePixel = 0
-    Instance.new("UICorner", top).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", top).CornerRadius = UDim.new(0,10)
 
-    local neon = Instance.new("Frame", top)
-    neon.Size = UDim2.new(1, 0, 0, 2)
-    neon.Position = UDim2.new(0, 0, 1, -2)
-    neon.BackgroundColor3 = Theme.Accent
-    neon.BorderSizePixel = 0
+    local strip = Instance.new("Frame", top)
+    strip.Size = UDim2.new(1,0,0,2)
+    strip.Position = UDim2.new(0,0,1,-2)
+    strip.BackgroundColor3 = Theme.Accent
 
     local titleLabel = Instance.new("TextLabel", top)
-    titleLabel.Text = "💀 " .. title
-    titleLabel.Size = UDim2.new(1, -20, 1, 0)
-    titleLabel.Position = UDim2.new(0, 15, 0, 0)
+    titleLabel.Text = "💀 "..title
+    titleLabel.Size = UDim2.new(1,-120,1,0)
+    titleLabel.Position = UDim2.new(0,12,0,0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextColor3 = Theme.Accent
     titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 18
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextSize = 17
+    titleLabel.TextXAlignment = Left
 
-    -- Sidebar
+    -- MINIMIZE & CLOSE
+    local minimize = Instance.new("TextButton", top)
+    minimize.Text = "–"
+    minimize.Size = UDim2.fromOffset(36,28)
+    minimize.Position = UDim2.new(1,-80,0,8)
+    minimize.BackgroundColor3 = Theme.Sidebar
+    minimize.TextColor3 = Theme.Text
+    minimize.Font = Enum.Font.GothamBold
+    minimize.TextSize = 20
+    Instance.new("UICorner", minimize)
+
+    local close = Instance.new("TextButton", top)
+    close.Text = "✕"
+    close.Size = UDim2.fromOffset(36,28)
+    close.Position = UDim2.new(1,-40,0,8)
+    close.BackgroundColor3 = Color3.fromRGB(120,40,40)
+    close.TextColor3 = Theme.Text
+    close.Font = Enum.Font.GothamBold
+    close.TextSize = 16
+    Instance.new("UICorner", close)
+
+    -- SIDEBAR
     local sidebar = Instance.new("Frame", main)
-    sidebar.Size = UDim2.new(0, 160, 1, -45)
-    sidebar.Position = UDim2.new(0, 0, 0, 45)
+    sidebar.Size = UDim2.new(0,150,1,-44)
+    sidebar.Position = UDim2.new(0,0,0,44)
     sidebar.BackgroundColor3 = Theme.Sidebar
-    sidebar.BorderSizePixel = 0
 
     local sideLayout = Instance.new("UIListLayout", sidebar)
-    sideLayout.Padding = UDim.new(0, 6)
-    sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    sideLayout.Padding = UDim.new(0,6)
+    sideLayout.HorizontalAlignment = Center
 
-    -- Content
+    -- CONTENT
     local content = Instance.new("Frame", main)
-    content.Size = UDim2.new(1, -160, 1, -45)
-    content.Position = UDim2.new(0, 160, 0, 45)
+    content.Size = UDim2.new(1,-150,1,-44)
+    content.Position = UDim2.new(0,150,0,44)
     content.BackgroundTransparency = 1
 
-    -- Dragging
-    local dragging, dragStart, startPos
+    -- FLOATING LOGO (RESTORE)
+    local logoBtn = Instance.new("ImageButton", gui)
+    logoBtn.Size = UDim2.fromOffset(56,56)
+    logoBtn.Position = UDim2.new(0,20,0.5,-28)
+    logoBtn.Image = logoImage or "rbxassetid://0"
+    logoBtn.Visible = false
+    logoBtn.BackgroundColor3 = Theme.Main
+    Instance.new("UICorner", logoBtn).CornerRadius = UDim.new(1,0)
+
+    -- DRAG (MOBILE + PC)
+    local dragging, startPos, dragStart
     top.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        if i.UserInputType == MouseButton1 or i.UserInputType == Touch then
             dragging = true
             dragStart = i.Position
             startPos = main.Position
@@ -85,7 +118,7 @@ function DakaitUI:CreateWindow(title)
     end)
 
     UIS.InputChanged:Connect(function(i)
-        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        if dragging and (i.UserInputType == MouseMovement or i.UserInputType == Touch) then
             local delta = i.Position - dragStart
             main.Position = UDim2.new(
                 startPos.X.Scale, startPos.X.Offset + delta.X,
@@ -95,55 +128,63 @@ function DakaitUI:CreateWindow(title)
     end)
 
     UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        if i.UserInputType == MouseButton1 or i.UserInputType == Touch then
             dragging = false
         end
     end)
 
-    Window.Sidebar = sidebar
+    -- MINIMIZE
+    minimize.MouseButton1Click:Connect(function()
+        content.Visible = not content.Visible
+        sidebar.Visible = not sidebar.Visible
+        main.Size = content.Visible and UDim2.fromOffset(560,380) or UDim2.fromOffset(560,44)
+    end)
+
+    -- CLOSE → LOGO
+    close.MouseButton1Click:Connect(function()
+        main.Visible = false
+        logoBtn.Visible = true
+    end)
+
+    logoBtn.MouseButton1Click:Connect(function()
+        main.Visible = true
+        logoBtn.Visible = false
+    end)
+
     Window.Content = content
+    Window.Sidebar = sidebar
     Window.Tabs = {}
 
     return Window
 end
 
---====================
--- CREATE TAB
---====================
+-- ======================
+-- TAB
+-- ======================
 function DakaitUI:CreateTab(name)
     local tab = {}
 
-    -- Button
     local btn = Instance.new("TextButton", self.Sidebar)
-    btn.Size = UDim2.new(0, 140, 0, 34)
     btn.Text = name
-    btn.BackgroundColor3 = Theme.Secondary
+    btn.Size = UDim2.fromOffset(130,34)
+    btn.BackgroundColor3 = Theme.Top
     btn.TextColor3 = Theme.Text
-    btn.Font = Enum.Font.GothamMedium
+    btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
-    btn.AutoButtonColor = false
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", btn)
 
-    -- Page
     local page = Instance.new("ScrollingFrame", self.Content)
-    page.Size = UDim2.new(1, -20, 1, -20)
-    page.Position = UDim2.new(0, 10, 0, 10)
-    page.ScrollBarThickness = 2
-    page.CanvasSize = UDim2.new(0, 0, 0, 0)
-    page.BackgroundTransparency = 1
+    page.Size = UDim2.new(1,-20,1,-20)
+    page.Position = UDim2.fromOffset(10,10)
+    page.ScrollBarThickness = 3
     page.Visible = false
+    page.BackgroundTransparency = 1
 
     local layout = Instance.new("UIListLayout", page)
-    layout.Padding = UDim.new(0, 10)
-
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
-    end)
+    layout.Padding = UDim.new(0,10)
 
     btn.MouseButton1Click:Connect(function()
-        for _, t in pairs(self.Tabs) do
-            t.Page.Visible = false
-        end
+        for _,t in pairs(self.Tabs) do t.Page.Visible = false end
         page.Visible = true
     end)
 
@@ -151,94 +192,58 @@ function DakaitUI:CreateTab(name)
     table.insert(self.Tabs, tab)
     if #self.Tabs == 1 then page.Visible = true end
 
-    --====================
-    -- COMPONENTS
-    --====================
-
-    function tab:AddButton(text, callback)
-        local b = Instance.new("TextButton", page)
-        b.Size = UDim2.new(1, -10, 0, 40)
-        b.Text = text
-        b.BackgroundColor3 = Theme.Secondary
-        b.TextColor3 = Theme.Text
-        b.Font = Enum.Font.Gotham
-        b.TextSize = 14
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
-
-        b.MouseButton1Click:Connect(function()
-            pcall(callback)
-        end)
-    end
-
-    function tab:AddToggle(text, callback)
-        local state = false
-        local t = Instance.new("TextButton", page)
-        t.Size = UDim2.new(1, -10, 0, 40)
-        t.Text = text .. " : OFF"
-        t.BackgroundColor3 = Theme.Secondary
-        t.TextColor3 = Theme.Text
-        t.Font = Enum.Font.Gotham
-        t.TextSize = 14
-        Instance.new("UICorner", t).CornerRadius = UDim.new(0, 4)
-
-        t.MouseButton1Click:Connect(function()
-            state = not state
-            t.Text = text .. (state and " : ON" or " : OFF")
-            pcall(callback, state)
-        end)
-    end
-
-    function tab:AddSlider(text, min, max, default, callback)
+    -- SLIDER
+    function tab:AddSlider(text,min,max,default,callback)
         local frame = Instance.new("Frame", page)
-        frame.Size = UDim2.new(1, -10, 0, 50)
-        frame.BackgroundColor3 = Theme.Secondary
+        frame.Size = UDim2.new(1,-10,0,52)
+        frame.BackgroundColor3 = Theme.Top
         Instance.new("UICorner", frame)
 
         local label = Instance.new("TextLabel", frame)
-        label.Size = UDim2.new(1, -20, 0, 20)
-        label.Position = UDim2.new(0, 10, 0, 5)
+        label.Text = text.." : "..default
+        label.Size = UDim2.new(1,-20,0,22)
+        label.Position = UDim2.fromOffset(10,4)
         label.BackgroundTransparency = 1
         label.TextColor3 = Theme.Text
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
-        label.Text = text .. " : " .. default
 
         local bar = Instance.new("Frame", frame)
-        bar.Size = UDim2.new(1, -40, 0, 4)
-        bar.Position = UDim2.new(0, 20, 0, 35)
-        bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        bar.Size = UDim2.new(1,-40,0,6)
+        bar.Position = UDim2.fromOffset(20,34)
+        bar.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        Instance.new("UICorner", bar)
 
         local fill = Instance.new("Frame", bar)
+        fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
         fill.BackgroundColor3 = Theme.Accent
-        fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        Instance.new("UICorner", fill)
 
-        local dragging = false
-
-        local function update()
-            local x = UIS:GetMouseLocation().X
-            local percent = math.clamp((x - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-            fill.Size = UDim2.new(percent, 0, 1, 0)
-            local val = math.floor(min + (max - min) * percent)
-            label.Text = text .. " : " .. val
-            pcall(callback, val)
+        local draggingSlider = false
+        local function update(x)
+            local pct = math.clamp((x-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
+            fill.Size = UDim2.new(pct,0,1,0)
+            local val = math.floor(min+(max-min)*pct)
+            label.Text = text.." : "..val
+            if callback then callback(val) end
         end
 
         bar.InputBegan:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-                update()
-            end
-        end)
-
-        UIS.InputEnded:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
+            if i.UserInputType==MouseButton1 or i.UserInputType==Touch then
+                draggingSlider=true
+                update(i.Position.X)
             end
         end)
 
         UIS.InputChanged:Connect(function(i)
-            if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-                update()
+            if draggingSlider and (i.UserInputType==MouseMovement or i.UserInputType==Touch) then
+                update(i.Position.X)
+            end
+        end)
+
+        UIS.InputEnded:Connect(function(i)
+            if i.UserInputType==MouseButton1 or i.UserInputType==Touch then
+                draggingSlider=false
             end
         end)
     end
