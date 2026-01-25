@@ -1,46 +1,51 @@
+--// DakaitUI Library (Single File)
 local DakaitUI = {}
 DakaitUI.__index = DakaitUI
 
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
--- Themes (Neon & Rust)
+--====================
+-- THEME
+--====================
 local Theme = {
     Main = Color3.fromRGB(22, 22, 22),
     Secondary = Color3.fromRGB(30, 30, 30),
-    Accent = Color3.fromRGB(255, 140, 40), -- Neon Orange
+    Accent = Color3.fromRGB(255, 140, 40),
     Text = Color3.fromRGB(255, 255, 255),
     Sidebar = Color3.fromRGB(18, 18, 18)
 }
 
+--====================
+-- CREATE WINDOW
+--====================
 function DakaitUI:CreateWindow(title)
     local Window = setmetatable({}, DakaitUI)
-    
-    local gui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-    gui.Name = "DakaitUI_V2"
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "DakaitUI"
+    gui.IgnoreGuiInset = true
+    gui.Parent = game:GetService("CoreGui")
 
     local main = Instance.new("Frame", gui)
     main.Size = UDim2.new(0, 560, 0, 380)
     main.Position = UDim2.new(0.5, -280, 0.5, -190)
     main.BackgroundColor3 = Theme.Main
     main.BorderSizePixel = 0
-    
-    -- Corner Rounding
-    local corner = Instance.new("UICorner", main)
-    corner.CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
 
-    -- Top Bar with Neon Strip
+    -- Top bar
     local top = Instance.new("Frame", main)
     top.Size = UDim2.new(1, 0, 0, 45)
     top.BackgroundColor3 = Theme.Secondary
     top.BorderSizePixel = 0
     Instance.new("UICorner", top).CornerRadius = UDim.new(0, 8)
 
-    local neonStrip = Instance.new("Frame", top)
-    neonStrip.Size = UDim2.new(1, 0, 0, 2)
-    neonStrip.Position = UDim2.new(0, 0, 1, -2)
-    neonStrip.BackgroundColor3 = Theme.Accent
-    neonStrip.BorderSizePixel = 0
+    local neon = Instance.new("Frame", top)
+    neon.Size = UDim2.new(1, 0, 0, 2)
+    neon.Position = UDim2.new(0, 0, 1, -2)
+    neon.BackgroundColor3 = Theme.Accent
+    neon.BorderSizePixel = 0
 
     local titleLabel = Instance.new("TextLabel", top)
     titleLabel.Text = "💀 " .. title
@@ -52,7 +57,7 @@ function DakaitUI:CreateWindow(title)
     titleLabel.TextSize = 18
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Sidebar Container
+    -- Sidebar
     local sidebar = Instance.new("Frame", main)
     sidebar.Size = UDim2.new(0, 160, 1, -45)
     sidebar.Position = UDim2.new(0, 0, 0, 45)
@@ -60,61 +65,85 @@ function DakaitUI:CreateWindow(title)
     sidebar.BorderSizePixel = 0
 
     local sideLayout = Instance.new("UIListLayout", sidebar)
-    sideLayout.Padding = UDim.new(0, 5)
+    sideLayout.Padding = UDim.new(0, 6)
     sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    -- Content Area
+    -- Content
     local content = Instance.new("Frame", main)
     content.Size = UDim2.new(1, -160, 1, -45)
     content.Position = UDim2.new(0, 160, 0, 45)
     content.BackgroundTransparency = 1
 
-    -- Window Dragging Logic
+    -- Dragging
     local dragging, dragStart, startPos
     top.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true; dragStart = i.Position; startPos = main.Position
+            dragging = true
+            dragStart = i.Position
+            startPos = main.Position
         end
     end)
+
     UIS.InputChanged:Connect(function(i)
         if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = i.Position - dragStart
-            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            main.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
         end
     end)
-    UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
-    Window.Content = content
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
     Window.Sidebar = sidebar
+    Window.Content = content
     Window.Tabs = {}
+
     return Window
 end
 
+--====================
+-- CREATE TAB
+--====================
 function DakaitUI:CreateTab(name)
-    local tab = {Page = nil, Button = nil}
-    
-    -- Tab Button
+    local tab = {}
+
+    -- Button
     local btn = Instance.new("TextButton", self.Sidebar)
+    btn.Size = UDim2.new(0, 140, 0, 34)
     btn.Text = name
-    btn.Size = UDim2.new(0, 140, 0, 35)
     btn.BackgroundColor3 = Theme.Secondary
     btn.TextColor3 = Theme.Text
     btn.Font = Enum.Font.GothamMedium
     btn.TextSize = 14
+    btn.AutoButtonColor = false
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 
-    -- Tab Page
+    -- Page
     local page = Instance.new("ScrollingFrame", self.Content)
     page.Size = UDim2.new(1, -20, 1, -20)
     page.Position = UDim2.new(0, 10, 0, 10)
+    page.ScrollBarThickness = 2
+    page.CanvasSize = UDim2.new(0, 0, 0, 0)
     page.BackgroundTransparency = 1
     page.Visible = false
-    page.ScrollBarThickness = 2
+
     local layout = Instance.new("UIListLayout", page)
     layout.Padding = UDim.new(0, 10)
 
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+    end)
+
     btn.MouseButton1Click:Connect(function()
-        for _, t in pairs(self.Tabs) do t.Page.Visible = false end
+        for _, t in pairs(self.Tabs) do
+            t.Page.Visible = false
+        end
         page.Visible = true
     end)
 
@@ -122,60 +151,99 @@ function DakaitUI:CreateTab(name)
     table.insert(self.Tabs, tab)
     if #self.Tabs == 1 then page.Visible = true end
 
-    -- ADD SLIDER COMPONENT (New!)
-    function tab:AddSlider(text, min, max, default, callback)
-        local sliderFrame = Instance.new("Frame", page)
-        sliderFrame.Size = UDim2.new(1, -10, 0, 50)
-        sliderFrame.BackgroundColor3 = Theme.Secondary
-        Instance.new("UICorner", sliderFrame)
+    --====================
+    -- COMPONENTS
+    --====================
 
-        local label = Instance.new("TextLabel", sliderFrame)
-        label.Text = text .. " : " .. default
+    function tab:AddButton(text, callback)
+        local b = Instance.new("TextButton", page)
+        b.Size = UDim2.new(1, -10, 0, 40)
+        b.Text = text
+        b.BackgroundColor3 = Theme.Secondary
+        b.TextColor3 = Theme.Text
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 14
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 4)
+
+        b.MouseButton1Click:Connect(function()
+            pcall(callback)
+        end)
+    end
+
+    function tab:AddToggle(text, callback)
+        local state = false
+        local t = Instance.new("TextButton", page)
+        t.Size = UDim2.new(1, -10, 0, 40)
+        t.Text = text .. " : OFF"
+        t.BackgroundColor3 = Theme.Secondary
+        t.TextColor3 = Theme.Text
+        t.Font = Enum.Font.Gotham
+        t.TextSize = 14
+        Instance.new("UICorner", t).CornerRadius = UDim.new(0, 4)
+
+        t.MouseButton1Click:Connect(function()
+            state = not state
+            t.Text = text .. (state and " : ON" or " : OFF")
+            pcall(callback, state)
+        end)
+    end
+
+    function tab:AddSlider(text, min, max, default, callback)
+        local frame = Instance.new("Frame", page)
+        frame.Size = UDim2.new(1, -10, 0, 50)
+        frame.BackgroundColor3 = Theme.Secondary
+        Instance.new("UICorner", frame)
+
+        local label = Instance.new("TextLabel", frame)
         label.Size = UDim2.new(1, -20, 0, 20)
         label.Position = UDim2.new(0, 10, 0, 5)
         label.BackgroundTransparency = 1
         label.TextColor3 = Theme.Text
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
+        label.Text = text .. " : " .. default
 
-        local bar = Instance.new("Frame", sliderFrame)
+        local bar = Instance.new("Frame", frame)
         bar.Size = UDim2.new(1, -40, 0, 4)
         bar.Position = UDim2.new(0, 20, 0, 35)
         bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 
         local fill = Instance.new("Frame", bar)
-        fill.Size = UDim2.new((default - min)/(max - min), 0, 1, 0)
         fill.BackgroundColor3 = Theme.Accent
-        
-        -- Logic for Slider
-        local sliding = false
-        local function move()
-            local mousePos = UIS:GetMouseLocation().X
-            local barPos = bar.AbsolutePosition.X
-            local barSize = bar.AbsoluteSize.X
-            local percent = math.clamp((mousePos - barPos) / barSize, 0, 1)
+        fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+
+        local dragging = false
+
+        local function update()
+            local x = UIS:GetMouseLocation().X
+            local percent = math.clamp((x - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
             fill.Size = UDim2.new(percent, 0, 1, 0)
             local val = math.floor(min + (max - min) * percent)
             label.Text = text .. " : " .. val
             pcall(callback, val)
         end
-        bar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = true move() end end)
-        UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end end)
-        UIS.InputChanged:Connect(function(i) if sliding and i.UserInputType == Enum.UserInputType.MouseMovement then move() end end)
+
+        bar.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                update()
+            end
+        end)
+
+        UIS.InputEnded:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+
+        UIS.InputChanged:Connect(function(i)
+            if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+                update()
+            end
+        end)
     end
 
-    -- Add existing Button/Toggle logic here...
     return tab
 end
-
---========================
--- EXAMPLE USAGE
---========================
-local Lib = DakaitUI:CreateWindow("DAKAIT HUB (OFFICIAL)")
-local MainTab = Lib:CreateTab("Aimbot Hulk")
-
-MainTab:AddSlider("Smoothness", 1, 10, 2, function(v)
-    print("New Smoothness: " .. v)
-end)
 
 return DakaitUI
