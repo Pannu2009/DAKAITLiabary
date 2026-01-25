@@ -1,7 +1,4 @@
---// DakaitUI Library (Mobile + PC)
---// Single-file Custom GUI Library
---// By Dakait
-
+--// DakaitUI Library (Single File)
 local DakaitUI = {}
 DakaitUI.__index = DakaitUI
 
@@ -9,182 +6,179 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
--- ======================
+--====================
 -- THEME
--- ======================
+--====================
 local Theme = {
-    Main = Color3.fromRGB(22,22,22),
-    Top = Color3.fromRGB(28,28,28),
-    Accent = Color3.fromRGB(255,140,40), -- Neon Orange
-    Text = Color3.fromRGB(240,240,240),
-    Sidebar = Color3.fromRGB(18,18,18)
+    Main = Color3.fromRGB(22, 22, 22),
+    Secondary = Color3.fromRGB(30, 30, 30),
+    Accent = Color3.fromRGB(255, 140, 40),
+    Text = Color3.fromRGB(255, 255, 255),
+    Sidebar = Color3.fromRGB(18, 18, 18)
 }
 
--- ======================
+--====================
 -- CREATE WINDOW
--- ======================
-function DakaitUI:CreateWindow(title, logoImage)
+--====================
+function DakaitUI:CreateWindow(title)
     local Window = setmetatable({}, DakaitUI)
 
-    local gui = Instance.new("ScreenGui", CoreGui)
+    local gui = Instance.new("ScreenGui")
     gui.Name = "DakaitUI"
+    gui.IgnoreGuiInset = true
     gui.ResetOnSpawn = false
+    gui.Parent = CoreGui
 
     local main = Instance.new("Frame", gui)
-    main.Size = UDim2.fromOffset(560, 380)
-    main.Position = UDim2.fromScale(0.5, 0.5) - UDim2.fromOffset(280,190)
+    main.Size = UDim2.new(0, 520, 0, 360)
+    main.Position = UDim2.fromScale(0.5, 0.5)
+    main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.BackgroundColor3 = Theme.Main
     main.BorderSizePixel = 0
     main.Active = true
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0,10)
-
-    -- TOP BAR
+    -- Top bar
     local top = Instance.new("Frame", main)
-    top.Size = UDim2.new(1,0,0,44)
-    top.BackgroundColor3 = Theme.Top
+    top.Size = UDim2.new(1, 0, 0, 42)
+    top.BackgroundColor3 = Theme.Secondary
     top.BorderSizePixel = 0
-    Instance.new("UICorner", top).CornerRadius = UDim.new(0,10)
+    Instance.new("UICorner", top).CornerRadius = UDim.new(0, 10)
 
-    local strip = Instance.new("Frame", top)
-    strip.Size = UDim2.new(1,0,0,2)
-    strip.Position = UDim2.new(0,0,1,-2)
-    strip.BackgroundColor3 = Theme.Accent
+    local neon = Instance.new("Frame", top)
+    neon.Size = UDim2.new(1, 0, 0, 2)
+    neon.Position = UDim2.new(0, 0, 1, -2)
+    neon.BackgroundColor3 = Theme.Accent
+    neon.BorderSizePixel = 0
 
     local titleLabel = Instance.new("TextLabel", top)
-    titleLabel.Text = "💀 "..title
-    titleLabel.Size = UDim2.new(1,-120,1,0)
-    titleLabel.Position = UDim2.new(0,12,0,0)
+    titleLabel.Text = "💀 " .. (title or "DAKAIT HUB")
+    titleLabel.Size = UDim2.new(1, -80, 1, 0)
+    titleLabel.Position = UDim2.new(0, 14, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextColor3 = Theme.Accent
     titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 17
-    titleLabel.TextXAlignment = Left
+    titleLabel.TextSize = 16
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextYAlignment = Enum.TextYAlignment.Center
 
-    -- MINIMIZE & CLOSE
+    -- Minimize Button
     local minimize = Instance.new("TextButton", top)
+    minimize.Size = UDim2.new(0, 30, 0, 30)
+    minimize.Position = UDim2.new(1, -36, 0, 6)
     minimize.Text = "–"
-    minimize.Size = UDim2.fromOffset(36,28)
-    minimize.Position = UDim2.new(1,-80,0,8)
-    minimize.BackgroundColor3 = Theme.Sidebar
-    minimize.TextColor3 = Theme.Text
     minimize.Font = Enum.Font.GothamBold
     minimize.TextSize = 20
-    Instance.new("UICorner", minimize)
+    minimize.TextColor3 = Theme.Text
+    minimize.BackgroundColor3 = Theme.Main
+    minimize.BorderSizePixel = 0
+    Instance.new("UICorner", minimize).CornerRadius = UDim.new(1, 0)
 
-    local close = Instance.new("TextButton", top)
-    close.Text = "✕"
-    close.Size = UDim2.fromOffset(36,28)
-    close.Position = UDim2.new(1,-40,0,8)
-    close.BackgroundColor3 = Color3.fromRGB(120,40,40)
-    close.TextColor3 = Theme.Text
-    close.Font = Enum.Font.GothamBold
-    close.TextSize = 16
-    Instance.new("UICorner", close)
+    local minimized = false
+    local fullSize = main.Size
 
-    -- SIDEBAR
+    minimize.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        TweenService:Create(
+            main,
+            TweenInfo.new(0.25, Enum.EasingStyle.Quad),
+            {Size = minimized and UDim2.new(fullSize.X.Scale, fullSize.X.Offset, 0, 42) or fullSize}
+        ):Play()
+    end)
+
+    -- Sidebar
     local sidebar = Instance.new("Frame", main)
-    sidebar.Size = UDim2.new(0,150,1,-44)
-    sidebar.Position = UDim2.new(0,0,0,44)
+    sidebar.Size = UDim2.new(0, 150, 1, -42)
+    sidebar.Position = UDim2.new(0, 0, 0, 42)
     sidebar.BackgroundColor3 = Theme.Sidebar
+    sidebar.BorderSizePixel = 0
 
     local sideLayout = Instance.new("UIListLayout", sidebar)
-    sideLayout.Padding = UDim.new(0,6)
-    sideLayout.HorizontalAlignment = Center
+    sideLayout.Padding = UDim.new(0, 6)
+    sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    -- CONTENT
+    -- Content
     local content = Instance.new("Frame", main)
-    content.Size = UDim2.new(1,-150,1,-44)
-    content.Position = UDim2.new(0,150,0,44)
+    content.Size = UDim2.new(1, -150, 1, -42)
+    content.Position = UDim2.new(0, 150, 0, 42)
     content.BackgroundTransparency = 1
 
-    -- FLOATING LOGO (RESTORE)
-    local logoBtn = Instance.new("ImageButton", gui)
-    logoBtn.Size = UDim2.fromOffset(56,56)
-    logoBtn.Position = UDim2.new(0,20,0.5,-28)
-    logoBtn.Image = logoImage or "rbxassetid://0"
-    logoBtn.Visible = false
-    logoBtn.BackgroundColor3 = Theme.Main
-    Instance.new("UICorner", logoBtn).CornerRadius = UDim.new(1,0)
+    -- Dragging (Mouse + Touch)
+    do
+        local dragging, dragStart, startPos
 
-    -- DRAG (MOBILE + PC)
-    local dragging, startPos, dragStart
-    top.InputBegan:Connect(function(i)
-        if i.UserInputType == MouseButton1 or i.UserInputType == Touch then
-            dragging = true
-            dragStart = i.Position
-            startPos = main.Position
-        end
-    end)
+        top.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1
+            or i.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = i.Position
+                startPos = main.Position
+            end
+        end)
 
-    UIS.InputChanged:Connect(function(i)
-        if dragging and (i.UserInputType == MouseMovement or i.UserInputType == Touch) then
-            local delta = i.Position - dragStart
-            main.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
+        UIS.InputChanged:Connect(function(i)
+            if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
+            or i.UserInputType == Enum.UserInputType.Touch) then
+                local delta = i.Position - dragStart
+                main.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+        end)
 
-    UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == MouseButton1 or i.UserInputType == Touch then
-            dragging = false
-        end
-    end)
+        UIS.InputEnded:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1
+            or i.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+    end
 
-    -- MINIMIZE
-    minimize.MouseButton1Click:Connect(function()
-        content.Visible = not content.Visible
-        sidebar.Visible = not sidebar.Visible
-        main.Size = content.Visible and UDim2.fromOffset(560,380) or UDim2.fromOffset(560,44)
-    end)
-
-    -- CLOSE → LOGO
-    close.MouseButton1Click:Connect(function()
-        main.Visible = false
-        logoBtn.Visible = true
-    end)
-
-    logoBtn.MouseButton1Click:Connect(function()
-        main.Visible = true
-        logoBtn.Visible = false
-    end)
-
-    Window.Content = content
     Window.Sidebar = sidebar
+    Window.Content = content
     Window.Tabs = {}
 
     return Window
 end
 
--- ======================
--- TAB
--- ======================
+--====================
+-- CREATE TAB
+--====================
 function DakaitUI:CreateTab(name)
     local tab = {}
 
     local btn = Instance.new("TextButton", self.Sidebar)
+    btn.Size = UDim2.new(1, -12, 0, 34)
     btn.Text = name
-    btn.Size = UDim2.fromOffset(130,34)
-    btn.BackgroundColor3 = Theme.Top
+    btn.BackgroundColor3 = Theme.Secondary
     btn.TextColor3 = Theme.Text
-    btn.Font = Enum.Font.Gotham
+    btn.Font = Enum.Font.GothamMedium
     btn.TextSize = 14
-    Instance.new("UICorner", btn)
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
     local page = Instance.new("ScrollingFrame", self.Content)
-    page.Size = UDim2.new(1,-20,1,-20)
-    page.Position = UDim2.fromOffset(10,10)
+    page.Size = UDim2.new(1, -16, 1, -16)
+    page.Position = UDim2.new(0, 8, 0, 8)
     page.ScrollBarThickness = 3
-    page.Visible = false
+    page.CanvasSize = UDim2.new()
     page.BackgroundTransparency = 1
+    page.Visible = false
 
     local layout = Instance.new("UIListLayout", page)
-    layout.Padding = UDim.new(0,10)
+    layout.Padding = UDim.new(0, 10)
+
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+    end)
 
     btn.MouseButton1Click:Connect(function()
-        for _,t in pairs(self.Tabs) do t.Page.Visible = false end
+        for _, t in ipairs(self.Tabs) do
+            t.Page.Visible = false
+        end
         page.Visible = true
     end)
 
@@ -192,58 +186,94 @@ function DakaitUI:CreateTab(name)
     table.insert(self.Tabs, tab)
     if #self.Tabs == 1 then page.Visible = true end
 
-    -- SLIDER
-    function tab:AddSlider(text,min,max,default,callback)
+    --====================
+    -- COMPONENTS
+    --====================
+
+    function tab:AddButton(text, callback)
+        local b = Instance.new("TextButton", page)
+        b.Size = UDim2.new(1, -10, 0, 40)
+        b.Text = text
+        b.BackgroundColor3 = Theme.Secondary
+        b.TextColor3 = Theme.Text
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 14
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+        b.MouseButton1Click:Connect(function()
+            pcall(callback)
+        end)
+    end
+
+    function tab:AddToggle(text, callback)
+        local state = false
+        local t = Instance.new("TextButton", page)
+        t.Size = UDim2.new(1, -10, 0, 40)
+        t.Text = text .. " : OFF"
+        t.BackgroundColor3 = Theme.Secondary
+        t.TextColor3 = Theme.Text
+        t.Font = Enum.Font.Gotham
+        t.TextSize = 14
+        Instance.new("UICorner", t).CornerRadius = UDim.new(0, 6)
+
+        t.MouseButton1Click:Connect(function()
+            state = not state
+            t.Text = text .. (state and " : ON" or " : OFF")
+            pcall(callback, state)
+        end)
+    end
+
+    function tab:AddSlider(text, min, max, default, callback)
         local frame = Instance.new("Frame", page)
-        frame.Size = UDim2.new(1,-10,0,52)
-        frame.BackgroundColor3 = Theme.Top
-        Instance.new("UICorner", frame)
+        frame.Size = UDim2.new(1, -10, 0, 52)
+        frame.BackgroundColor3 = Theme.Secondary
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
 
         local label = Instance.new("TextLabel", frame)
-        label.Text = text.." : "..default
-        label.Size = UDim2.new(1,-20,0,22)
-        label.Position = UDim2.fromOffset(10,4)
+        label.Size = UDim2.new(1, -20, 0, 20)
+        label.Position = UDim2.new(0, 10, 0, 6)
         label.BackgroundTransparency = 1
         label.TextColor3 = Theme.Text
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
 
         local bar = Instance.new("Frame", frame)
-        bar.Size = UDim2.new(1,-40,0,6)
-        bar.Position = UDim2.fromOffset(20,34)
-        bar.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        Instance.new("UICorner", bar)
+        bar.Size = UDim2.new(1, -40, 0, 4)
+        bar.Position = UDim2.new(0, 20, 0, 36)
+        bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 
         local fill = Instance.new("Frame", bar)
-        fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
         fill.BackgroundColor3 = Theme.Accent
-        Instance.new("UICorner", fill)
 
-        local draggingSlider = false
-        local function update(x)
-            local pct = math.clamp((x-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
-            fill.Size = UDim2.new(pct,0,1,0)
-            local val = math.floor(min+(max-min)*pct)
-            label.Text = text.." : "..val
-            if callback then callback(val) end
+        local dragging = false
+        local function set(val)
+            val = math.clamp(val, min, max)
+            local pct = (val - min) / (max - min)
+            fill.Size = UDim2.new(pct, 0, 1, 0)
+            label.Text = text .. " : " .. val
+            pcall(callback, val)
         end
 
-        bar.InputBegan:Connect(function(i)
-            if i.UserInputType==MouseButton1 or i.UserInputType==Touch then
-                draggingSlider=true
-                update(i.Position.X)
-            end
-        end)
+        set(default)
 
-        UIS.InputChanged:Connect(function(i)
-            if draggingSlider and (i.UserInputType==MouseMovement or i.UserInputType==Touch) then
-                update(i.Position.X)
+        bar.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
             end
         end)
 
         UIS.InputEnded:Connect(function(i)
-            if i.UserInputType==MouseButton1 or i.UserInputType==Touch then
-                draggingSlider=false
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+
+        UIS.InputChanged:Connect(function()
+            if dragging then
+                local x = UIS:GetMouseLocation().X
+                local pct = math.clamp((x - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                set(math.floor(min + (max - min) * pct))
             end
         end)
     end
