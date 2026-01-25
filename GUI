@@ -1,4 +1,4 @@
---// DakaitUI Library (Single File)
+--// DakaitUI Library (V3 - Asset Pack Integrated)
 local DakaitUI = {}
 DakaitUI.__index = DakaitUI
 
@@ -6,179 +6,124 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
---====================
--- THEME
---====================
-local Theme = {
-    Main = Color3.fromRGB(22, 22, 22),
-    Secondary = Color3.fromRGB(30, 30, 30),
-    Accent = Color3.fromRGB(255, 140, 40),
-    Text = Color3.fromRGB(255, 255, 255),
-    Sidebar = Color3.fromRGB(18, 18, 18)
+-- ASSET IDs (Matching your Pack)
+local ASSETS = {
+    Logo = "rbxassetid://13864752250", -- Indian Skull Logo
+    MainPanel = "rbxassetid://6031068433", -- Metal Texture
+    ButtonImg = "rbxassetid://6031094678", -- Rust Button
+    ToggleOn = "rbxassetid://13864755672", -- Neon Orange Toggle
+    ToggleOff = "rbxassetid://13864756891", -- Grey Toggle
 }
 
---====================
--- CREATE WINDOW
---====================
+local Theme = {
+    Main = Color3.fromRGB(25, 25, 25),
+    Secondary = Color3.fromRGB(35, 35, 35),
+    Accent = Color3.fromRGB(255, 140, 40), -- Neon Orange
+    Text = Color3.fromRGB(240, 240, 240)
+}
+
 function DakaitUI:CreateWindow(title)
     local Window = setmetatable({}, DakaitUI)
 
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "DakaitUI"
+    local gui = Instance.new("ScreenGui", CoreGui)
+    gui.Name = "Dakait_Final"
     gui.IgnoreGuiInset = true
-    gui.ResetOnSpawn = false
-    gui.Parent = CoreGui
 
-    local main = Instance.new("Frame", gui)
-    main.Size = UDim2.new(0, 520, 0, 360)
+    -- Main Frame with Pack Texture
+    local main = Instance.new("ImageLabel", gui)
+    main.Name = "Main"
+    main.Size = UDim2.new(0, 540, 0, 360)
     main.Position = UDim2.fromScale(0.5, 0.5)
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.BackgroundColor3 = Theme.Main
-    main.BorderSizePixel = 0
+    main.Image = ASSETS.MainPanel
+    main.ImageColor3 = Color3.fromRGB(80, 80, 80) -- Darker metal feel
+    main.ScaleType = Enum.ScaleType.Slice
+    main.SliceCenter = Rect.new(10, 10, 10, 10)
     main.Active = true
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+    
+    local corner = Instance.new("UICorner", main)
+    
+    -- Logo from Pack
+    local logo = Instance.new("ImageLabel", main)
+    logo.Size = UDim2.new(0, 40, 0, 40)
+    logo.Position = UDim2.new(0, 10, 0, 5)
+    logo.Image = ASSETS.Logo
+    logo.BackgroundTransparency = 1
 
-    -- Top bar
-    local top = Instance.new("Frame", main)
-    top.Size = UDim2.new(1, 0, 0, 42)
-    top.BackgroundColor3 = Theme.Secondary
-    top.BorderSizePixel = 0
-    Instance.new("UICorner", top).CornerRadius = UDim.new(0, 10)
-
-    local neon = Instance.new("Frame", top)
-    neon.Size = UDim2.new(1, 0, 0, 2)
-    neon.Position = UDim2.new(0, 0, 1, -2)
-    neon.BackgroundColor3 = Theme.Accent
-    neon.BorderSizePixel = 0
-
-    local titleLabel = Instance.new("TextLabel", top)
-    titleLabel.Text = "💀 " .. (title or "DAKAIT HUB")
-    titleLabel.Size = UDim2.new(1, -80, 1, 0)
-    titleLabel.Position = UDim2.new(0, 14, 0, 0)
+    local titleLabel = Instance.new("TextLabel", main)
+    titleLabel.Text = title or "DAKAIT"
+    titleLabel.Size = UDim2.new(0, 200, 0, 45)
+    titleLabel.Position = UDim2.new(0, 55, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextColor3 = Theme.Accent
     titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 16
+    titleLabel.TextSize = 18
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextYAlignment = Enum.TextYAlignment.Center
 
-    -- Minimize Button
-    local minimize = Instance.new("TextButton", top)
-    minimize.Size = UDim2.new(0, 30, 0, 30)
-    minimize.Position = UDim2.new(1, -36, 0, 6)
-    minimize.Text = "–"
-    minimize.Font = Enum.Font.GothamBold
-    minimize.TextSize = 20
-    minimize.TextColor3 = Theme.Text
-    minimize.BackgroundColor3 = Theme.Main
-    minimize.BorderSizePixel = 0
-    Instance.new("UICorner", minimize).CornerRadius = UDim.new(1, 0)
-
-    local minimized = false
-    local fullSize = main.Size
-
-    minimize.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        TweenService:Create(
-            main,
-            TweenInfo.new(0.25, Enum.EasingStyle.Quad),
-            {Size = minimized and UDim2.new(fullSize.X.Scale, fullSize.X.Offset, 0, 42) or fullSize}
-        ):Play()
-    end)
-
-    -- Sidebar
+    -- Content Areas
     local sidebar = Instance.new("Frame", main)
-    sidebar.Size = UDim2.new(0, 150, 1, -42)
-    sidebar.Position = UDim2.new(0, 0, 0, 42)
-    sidebar.BackgroundColor3 = Theme.Sidebar
-    sidebar.BorderSizePixel = 0
-
+    sidebar.Size = UDim2.new(0, 150, 1, -50)
+    sidebar.Position = UDim2.new(0, 0, 0, 50)
+    sidebar.BackgroundTransparency = 1
     local sideLayout = Instance.new("UIListLayout", sidebar)
-    sideLayout.Padding = UDim.new(0, 6)
+    sideLayout.Padding = UDim.new(0, 5)
     sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    -- Content
     local content = Instance.new("Frame", main)
-    content.Size = UDim2.new(1, -150, 1, -42)
-    content.Position = UDim2.new(0, 150, 0, 42)
+    content.Size = UDim2.new(1, -160, 1, -60)
+    content.Position = UDim2.new(0, 155, 0, 55)
     content.BackgroundTransparency = 1
 
-    -- Dragging (Mouse + Touch)
-    do
-        local dragging, dragStart, startPos
-
-        top.InputBegan:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1
-            or i.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = i.Position
-                startPos = main.Position
-            end
-        end)
-
-        UIS.InputChanged:Connect(function(i)
-            if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
-            or i.UserInputType == Enum.UserInputType.Touch) then
-                local delta = i.Position - dragStart
-                main.Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            end
-        end)
-
-        UIS.InputEnded:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1
-            or i.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end)
-    end
+    -- Window Dragging
+    local dragging, dragStart, startPos
+    main.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true; dragStart = i.Position; startPos = main.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(i)
+        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = i.Position - dragStart
+            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UIS.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
     Window.Sidebar = sidebar
     Window.Content = content
     Window.Tabs = {}
-
     return Window
 end
 
---====================
--- CREATE TAB
---====================
 function DakaitUI:CreateTab(name)
     local tab = {}
-
-    local btn = Instance.new("TextButton", self.Sidebar)
-    btn.Size = UDim2.new(1, -12, 0, 34)
-    btn.Text = name
-    btn.BackgroundColor3 = Theme.Secondary
-    btn.TextColor3 = Theme.Text
-    btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 14
-    btn.AutoButtonColor = false
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    
+    -- Tab Button (Metal Style)
+    local btn = Instance.new("ImageButton", self.Sidebar)
+    btn.Size = UDim2.new(1, -20, 0, 35)
+    btn.Image = ASSETS.ButtonImg
+    btn.ImageColor3 = Theme.Secondary
+    btn.ScaleType = Enum.ScaleType.Slice
+    btn.SliceCenter = Rect.new(10, 10, 10, 10)
+    
+    local btnText = Instance.new("TextLabel", btn)
+    btnText.Size = UDim2.new(1, 0, 1, 0)
+    btnText.BackgroundTransparency = 1
+    btnText.Text = name
+    btnText.TextColor3 = Theme.Text
+    btnText.Font = Enum.Font.GothamMedium
+    btnText.TextSize = 13
 
     local page = Instance.new("ScrollingFrame", self.Content)
-    page.Size = UDim2.new(1, -16, 1, -16)
-    page.Position = UDim2.new(0, 8, 0, 8)
-    page.ScrollBarThickness = 3
-    page.CanvasSize = UDim2.new()
+    page.Size = UDim2.new(1, 0, 1, 0)
     page.BackgroundTransparency = 1
     page.Visible = false
-
-    local layout = Instance.new("UIListLayout", page)
-    layout.Padding = UDim.new(0, 10)
-
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
-    end)
+    page.ScrollBarThickness = 0
+    Instance.new("UIListLayout", page).Padding = UDim.new(0, 10)
 
     btn.MouseButton1Click:Connect(function()
-        for _, t in ipairs(self.Tabs) do
-            t.Page.Visible = false
-        end
+        for _, t in ipairs(self.Tabs) do t.Page.Visible = false end
         page.Visible = true
     end)
 
@@ -186,99 +131,44 @@ function DakaitUI:CreateTab(name)
     table.insert(self.Tabs, tab)
     if #self.Tabs == 1 then page.Visible = true end
 
-    --====================
-    -- COMPONENTS
-    --====================
-
-    function tab:AddButton(text, callback)
-        local b = Instance.new("TextButton", page)
-        b.Size = UDim2.new(1, -10, 0, 40)
-        b.Text = text
-        b.BackgroundColor3 = Theme.Secondary
-        b.TextColor3 = Theme.Text
-        b.Font = Enum.Font.Gotham
-        b.TextSize = 14
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-
-        b.MouseButton1Click:Connect(function()
-            pcall(callback)
-        end)
-    end
-
+    -- Toggle with Pack Icons
     function tab:AddToggle(text, callback)
         local state = false
-        local t = Instance.new("TextButton", page)
-        t.Size = UDim2.new(1, -10, 0, 40)
-        t.Text = text .. " : OFF"
-        t.BackgroundColor3 = Theme.Secondary
-        t.TextColor3 = Theme.Text
-        t.Font = Enum.Font.Gotham
-        t.TextSize = 14
-        Instance.new("UICorner", t).CornerRadius = UDim.new(0, 6)
-
-        t.MouseButton1Click:Connect(function()
-            state = not state
-            t.Text = text .. (state and " : ON" or " : OFF")
-            pcall(callback, state)
-        end)
-    end
-
-    function tab:AddSlider(text, min, max, default, callback)
-        local frame = Instance.new("Frame", page)
-        frame.Size = UDim2.new(1, -10, 0, 52)
-        frame.BackgroundColor3 = Theme.Secondary
-        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-
-        local label = Instance.new("TextLabel", frame)
-        label.Size = UDim2.new(1, -20, 0, 20)
-        label.Position = UDim2.new(0, 10, 0, 6)
+        local container = Instance.new("Frame", page)
+        container.Size = UDim2.new(1, 0, 0, 40)
+        container.BackgroundTransparency = 1
+        
+        local label = Instance.new("TextLabel", container)
+        label.Text = text
+        label.Size = UDim2.new(1, -50, 1, 0)
         label.BackgroundTransparency = 1
         label.TextColor3 = Theme.Text
         label.Font = Enum.Font.Gotham
-        label.TextSize = 13
+        label.TextSize = 14
         label.TextXAlignment = Enum.TextXAlignment.Left
 
-        local bar = Instance.new("Frame", frame)
-        bar.Size = UDim2.new(1, -40, 0, 4)
-        bar.Position = UDim2.new(0, 20, 0, 36)
-        bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        local toggleImg = Instance.new("ImageButton", container)
+        toggleImg.Size = UDim2.new(0, 40, 0, 20)
+        toggleImg.Position = UDim2.new(1, -45, 0.5, -10)
+        toggleImg.Image = ASSETS.ToggleOff
+        toggleImg.BackgroundTransparency = 1
 
-        local fill = Instance.new("Frame", bar)
-        fill.BackgroundColor3 = Theme.Accent
-
-        local dragging = false
-        local function set(val)
-            val = math.clamp(val, min, max)
-            local pct = (val - min) / (max - min)
-            fill.Size = UDim2.new(pct, 0, 1, 0)
-            label.Text = text .. " : " .. val
-            pcall(callback, val)
-        end
-
-        set(default)
-
-        bar.InputBegan:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-            end
-        end)
-
-        UIS.InputEnded:Connect(function(i)
-            if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-            end
-        end)
-
-        UIS.InputChanged:Connect(function()
-            if dragging then
-                local x = UIS:GetMouseLocation().X
-                local pct = math.clamp((x - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-                set(math.floor(min + (max - min) * pct))
-            end
+        toggleImg.MouseButton1Click:Connect(function()
+            state = not state
+            toggleImg.Image = state and ASSETS.ToggleOn or ASSETS.ToggleOff
+            pcall(callback, state)
         end)
     end
 
     return tab
 end
+
+--// INITIALIZE
+local Dakait = DakaitUI:CreateWindow("DAKAIT HUB")
+local Main = Dakait:CreateTab("Combat")
+
+Main:AddToggle("Machete Aura", function(v)
+    print("Aura is: " .. tostring(v))
+end)
 
 return DakaitUI
