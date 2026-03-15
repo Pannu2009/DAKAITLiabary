@@ -1,180 +1,52 @@
-local DakaitLib = {}
+local cloneref = (cloneref or clonereference or function(instance) return instance end)
 
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
+local RunService = cloneref(game:GetService("RunService"))
+local HttpService = cloneref(game:GetService("HttpService"))
 
-local LocalPlayer = Players.LocalPlayer
-local AnimInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
-local Theme = {
-	Main = Color3.fromRGB(15, 15, 15),
-	Secondary = Color3.fromRGB(22, 22, 22),
-	Accent = Color3.fromRGB(0, 255, 150),
-	Text = Color3.fromRGB(255, 255, 255),
-	DarkText = Color3.fromRGB(160, 160, 160),
-	Font = Enum.Font.GothamBold
+local Window 
+local DakaitConfig = {
+    Folder = nil,
+    Path = nil,
+    Configs = {},
+    Parser = {
+        -- This handles how each UI element is saved/loaded
+        Colorpicker = {
+            Save = function(obj) return {__type = "Colorpicker", value = obj.Default:ToHex(), transparency = obj.Transparency} end,
+            Load = function(el, data) if el.Update then el:Update(Color3.fromHex(data.value), data.transparency) end end
+        },
+        Dropdown = {
+            Save = function(obj) return {__type = "Dropdown", value = obj.Value} end,
+            Load = function(el, data) if el.Select then el:Select(data.value) end end
+        },
+        Slider = {
+            Save = function(obj) return {__type = "Slider", value = obj.Value.Default} end,
+            Load = function(el, data) if el.Set then el:Set(tonumber(data.value)) end end
+        },
+        Toggle = {
+            Save = function(obj) return {__type = "Toggle", value = obj.Value} end,
+            Load = function(el, data) if el.Set then el:Set(data.value) end end
+        },
+    }
 }
 
-local function MakeDraggable(topBar, mainFrame)
-	local dragging, dragInput, dragStart, startPos
-	topBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true dragStart = input.Position startPos = mainFrame.Position
-			input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			local delta = input.Position - dragStart
-			mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
+function DakaitConfig:Init(WindowTable)
+    if not WindowTable.Folder then return warn("[ DakaitLib ] Window.Folder missing!") end
+    
+    Window = WindowTable
+    DakaitConfig.Folder = Window.Folder
+    -- PATH REBRAND: Saving to your own folder
+    DakaitConfig.Path = "DakaitLib/" .. tostring(DakaitConfig.Folder) .. "/configs/"
+    
+    if not isfolder(DakaitConfig.Path) then
+        makefolder("DakaitLib/")
+        makefolder("DakaitLib/" .. tostring(DakaitConfig.Folder))
+        makefolder(DakaitConfig.Path)
+    end
+    
+    return DakaitConfig
 end
 
-function DakaitLib:CreateWindow(hubName, gameName)
-	local ScreenGui = Instance.new("ScreenGui")
-	ScreenGui.Name = "DakaitHub"
-	pcall(function() ScreenGui.Parent = CoreGui end)
-	if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+-- [ Rest of the Config Functions remain high-performance ]
+-- We will use this module to allow users to Save/Load their Dakait Hub settings.
 
-	local ToggleBtn = Instance.new("TextButton")
-	ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
-	ToggleBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
-	ToggleBtn.BackgroundColor3 = Theme.Secondary
-	ToggleBtn.Text = "D"
-	ToggleBtn.TextColor3 = Theme.Accent
-	ToggleBtn.Font = Theme.Font
-	ToggleBtn.TextSize = 22
-	ToggleBtn.Parent = ScreenGui
-	Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
-	local TStroke = Instance.new("UIStroke", ToggleBtn)
-	TStroke.Color = Theme.Accent TStroke.Thickness = 1.5
-
-	local Main = Instance.new("Frame")
-	Main.Size = UDim2.new(0, 500, 0, 320)
-	Main.Position = UDim2.new(0.5, -250, 0.5, -160)
-	Main.BackgroundColor3 = Theme.Main
-	Main.BorderSizePixel = 0
-	Main.Parent = ScreenGui
-	Instance.new("UICorner", Main)
-	
-	local MainStroke = Instance.new("UIStroke", Main)
-	MainStroke.Color = Theme.Accent MainStroke.Thickness = 1.5 MainStroke.Transparency = 0.7
-
-	ToggleBtn.MouseButton1Click:Connect(function() Main.Visible = not Main.Visible end)
-
-	local TopBar = Instance.new("Frame")
-	TopBar.Size = UDim2.new(1, 0, 0, 40)
-	TopBar.BackgroundTransparency = 1
-	TopBar.Parent = Main
-	MakeDraggable(TopBar, Main)
-
-	local Title = Instance.new("TextLabel")
-	Title.Text = hubName .. " | " .. gameName
-	Title.Size = UDim2.new(1, -20, 1, 0)
-	Title.Position = UDim2.new(0, 15, 0, 0)
-	Title.TextColor3 = Theme.Text
-	Title.Font = Theme.Font
-	Title.TextSize = 15
-	Title.BackgroundTransparency = 1
-	Title.TextXAlignment = Enum.TextXAlignment.Left
-	Title.Parent = TopBar
-
-	local Sidebar = Instance.new("ScrollingFrame")
-	Sidebar.Size = UDim2.new(0, 130, 1, -50)
-	Sidebar.Position = UDim2.new(0, 8, 0, 42)
-	Sidebar.BackgroundTransparency = 1
-	Sidebar.ScrollBarThickness = 0
-	Sidebar.Parent = Main
-	
-	local SideLayout = Instance.new("UIListLayout", Sidebar)
-	SideLayout.Padding = UDim.new(0, 5)
-
-	local Container = Instance.new("Frame")
-	Container.Size = UDim2.new(1, -155, 1, -55)
-	Container.Position = UDim2.new(0, 145, 0, 45)
-	Container.BackgroundTransparency = 1
-	Container.Parent = Main
-
-	local FirstTab = true
-
-	function DakaitLib:CreateTab(name)
-		local TabBtn = Instance.new("TextButton")
-		TabBtn.Size = UDim2.new(1, -10, 0, 32)
-		TabBtn.BackgroundTransparency = 1
-		TabBtn.Text = name
-		TabBtn.TextColor3 = Theme.DarkText
-		TabBtn.Font = Theme.Font
-		TabBtn.TextSize = 14
-		TabBtn.Parent = Sidebar
-
-		local Page = Instance.new("ScrollingFrame")
-		Page.Size = UDim2.new(1, 0, 1, 0)
-		Page.BackgroundTransparency = 1
-		Page.Visible = false
-		Page.ScrollBarThickness = 0
-		Page.Parent = Container
-		
-		local PageLayout = Instance.new("UIListLayout", Page)
-		PageLayout.Padding = UDim.new(0, 6)
-
-		local function ShowPage()
-			for _, v in pairs(Container:GetChildren()) do v.Visible = false end
-			for _, v in pairs(Sidebar:GetChildren()) do if v:IsA("TextButton") then v.TextColor3 = Theme.DarkText end end
-			Page.Visible = true
-			TabBtn.TextColor3 = Theme.Accent
-		end
-
-		TabBtn.MouseButton1Click:Connect(ShowPage)
-		if FirstTab then ShowPage() FirstTab = false end
-
-		local Elements = {}
-		
-		function Elements:AddButton(text, callback)
-			local Btn = Instance.new("TextButton")
-			Btn.Size = UDim2.new(1, -10, 0, 38)
-			Btn.BackgroundColor3 = Theme.Secondary
-			Btn.Text = "  " .. text
-			Btn.TextColor3 = Theme.Text
-			Btn.Font = Theme.Font
-			Btn.TextSize = 13
-			Btn.TextXAlignment = Enum.TextXAlignment.Left
-			Btn.Parent = Page
-			Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-			Btn.MouseButton1Click:Connect(callback)
-		end
-
-		function Elements:AddToggle(text, callback)
-			local TglFrame = Instance.new("TextButton")
-			TglFrame.Size = UDim2.new(1, -10, 0, 38)
-			TglFrame.BackgroundColor3 = Theme.Secondary
-			TglFrame.Text = "  " .. text
-			TglFrame.TextColor3 = Theme.Text
-			TglFrame.Font = Theme.Font
-			TglFrame.TextSize = 13
-			TglFrame.TextXAlignment = Enum.TextXAlignment.Left
-			TglFrame.Parent = Page
-			Instance.new("UICorner", TglFrame).CornerRadius = UDim.new(0, 6)
-
-			local Status = Instance.new("Frame")
-			Status.Size = UDim2.new(0, 24, 0, 12)
-			Status.Position = UDim2.new(1, -35, 0.5, -6)
-			Status.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-			Status.Parent = TglFrame
-			Instance.new("UICorner", Status).CornerRadius = UDim.new(1, 0)
-
-			local Toggled = false
-			TglFrame.MouseButton1Click:Connect(function()
-				Toggled = not Toggled
-				TweenService:Create(Status, AnimInfo, {BackgroundColor3 = Toggled and Theme.Accent or Color3.fromRGB(50, 50, 50)}):Play()
-				callback(Toggled)
-			end)
-		end
-		
-		return Elements
-	end
-	return DakaitLib
-end
-return DakaitLib
+return DakaitConfig
